@@ -1589,9 +1589,16 @@ function renderProjects(filter){
     var msHTML='<div class="proj-milestones">'
       +p.milestones.map(function(m,i){
         var done=mileDone.indexOf(i)!==-1;
-        return '<div class="ms-row"><div class="ms-check'+(done?' done':'')+'" data-pid="'+p.id+'" data-midx="'+i+'" onclick="togMs(this.dataset.pid,this.dataset.midx,this)">'+(done?'✓':'')+'</div>'
-          +'<span class="ms-text'+(done?' done':'')+'">'+m+'</span></div>';
+        return '<div class="ms-row">'
+          +'<div class="ms-check'+(done?' done':'')+'" data-pid="'+p.id+'" data-midx="'+i+'" onclick="togMs(this.dataset.pid,this.dataset.midx,this)">'+(done?'✓':'')+'</div>'
+          +'<input class="ms-text'+(done?' done':'')+'" value="'+m+'" data-pid="'+p.id+'" data-midx="'+i+'" style="flex:1;border:none;background:transparent;font-size:12px;color:'+(done?'var(--text-light)':'var(--text-mid)')+';font-family:inherit;text-decoration:'+(done?'line-through':'none')+';outline:none;padding:0" oninput="editMs(this.dataset.pid,this.dataset.midx,this.value)">'
+          +'<button data-pid="'+p.id+'" data-midx="'+i+'" onclick="delMs(this.dataset.pid,this.dataset.midx)" style="background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;padding:0 2px">×</button>'
+          +'</div>';
       }).join('')
+      +'<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'
+        +'<input placeholder="Add milestone…" data-pid="'+p.id+'" class="ms-add-inp" style="flex:1;border:none;border-bottom:1.5px solid var(--blush);padding:6px 0;font-size:12px;font-family:inherit;color:var(--text);background:transparent;outline:none">'
+        +'<button data-pid="'+p.id+'" onclick="addMsInline(this.dataset.pid)" style="background:var(--rose-pale);border:none;color:var(--rose);font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;flex-shrink:0;font-family:inherit">+ Add</button>'
+      +'</div>'
       +'</div>';
     card.innerHTML=topHTML+barHTML+sliderHTML+msHTML;
     card.querySelector('.proj-card-top').addEventListener('click',function(){ card.classList.toggle('open'); });
@@ -2136,6 +2143,117 @@ window.addEventListener('resize',checkDesktop); checkDesktop();
 //  INIT — ALWAYS HOME
 // ══════════════════════════════════════════════════════════════
 go('home');
+
+// ── Milestone inline edit / delete / add ─────────────────────────────
+function editMs(pid, midxStr, val) {
+  var midx = parseInt(midxStr);
+  // Find project and update milestone text
+  for (var i = 0; i < ALL_PROJECTS.length; i++) {
+    if (ALL_PROJECTS[i].id === pid) {
+      ALL_PROJECTS[i].milestones[midx] = val;
+      // If custom project, save back
+      if (ALL_PROJECTS[i].custom) {
+        var custom = ls('custom-projects') || [];
+        for (var j = 0; j < custom.length; j++) {
+          if (custom[j].id === pid) { custom[j].milestones[midx] = val; break; }
+        }
+        ls('custom-projects', custom);
+      }
+      break;
+    }
+  }
+}
+
+function delMs(pid, midxStr) {
+  var midx = parseInt(midxStr);
+  for (var i = 0; i < ALL_PROJECTS.length; i++) {
+    if (ALL_PROJECTS[i].id === pid) {
+      ALL_PROJECTS[i].milestones.splice(midx, 1);
+      // Remove from checked list too
+      var arr = ls('proj-ms-' + pid) || [];
+      arr = arr.filter(function(x) { return x !== midx; }).map(function(x) { return x > midx ? x - 1 : x; });
+      ls('proj-ms-' + pid, arr);
+      if (ALL_PROJECTS[i].custom) {
+        var custom = ls('custom-projects') || [];
+        for (var j = 0; j < custom.length; j++) {
+          if (custom[j].id === pid) { custom[j].milestones = ALL_PROJECTS[i].milestones.slice(); break; }
+        }
+        ls('custom-projects', custom);
+      }
+      break;
+    }
+  }
+  // Re-render keeping card open
+  var filter = document.querySelector('.cat-chip.active');
+  var cat = filter ? filter.textContent.toLowerCase() : 'all';
+  if (cat === 'all') renderProjects('all');
+  else if (cat === 'ib unity') renderProjects('ib');
+  else if (cat === 'mina tutors me') renderProjects('mtm');
+  else renderProjects('custom');
+  // Re-open the card
+  setTimeout(function() {
+    var cards = document.querySelectorAll('.proj-card');
+    cards.forEach(function(card) {
+      var nameEl = card.querySelector('.proj-card-name');
+      if (nameEl) {
+        for (var i = 0; i < ALL_PROJECTS.length; i++) {
+          if (ALL_PROJECTS[i].id === pid && nameEl.textContent === ALL_PROJECTS[i].name) {
+            card.classList.add('open'); break;
+          }
+        }
+      }
+    });
+  }, 50);
+}
+
+function addMsInline(pid) {
+  // Find input next to button
+  var inputs = document.querySelectorAll('.ms-add-inp[data-pid="' + pid + '"]');
+  var inp = inputs[inputs.length - 1];
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  for (var i = 0; i < ALL_PROJECTS.length; i++) {
+    if (ALL_PROJECTS[i].id === pid) {
+      ALL_PROJECTS[i].milestones.push(val);
+      if (ALL_PROJECTS[i].custom) {
+        var custom = ls('custom-projects') || [];
+        for (var j = 0; j < custom.length; j++) {
+          if (custom[j].id === pid) { custom[j].milestones = ALL_PROJECTS[i].milestones.slice(); break; }
+        }
+        ls('custom-projects', custom);
+      }
+      break;
+    }
+  }
+  inp.value = '';
+  // Re-render and re-open
+  var filter = document.querySelector('.cat-chip.active');
+  var cat = filter ? filter.textContent.toLowerCase() : 'all';
+  if (cat === 'all') renderProjects('all');
+  else if (cat === 'ib unity') renderProjects('ib');
+  else if (cat === 'mina tutors me') renderProjects('mtm');
+  else renderProjects('custom');
+  setTimeout(function() {
+    var cards = document.querySelectorAll('.proj-card');
+    cards.forEach(function(card) {
+      var nameEl = card.querySelector('.proj-card-name');
+      if (nameEl) {
+        for (var i = 0; i < ALL_PROJECTS.length; i++) {
+          if (ALL_PROJECTS[i].id === pid && nameEl.textContent === ALL_PROJECTS[i].name) {
+            card.classList.add('open');
+            // Focus the new add input
+            var newInp = card.querySelector('.ms-add-inp');
+            if (newInp) newInp.focus();
+            break;
+          }
+        }
+      }
+    });
+  }, 50);
+  toast('✦ Milestone added!');
+}
+
 </script>
 </body>
 </html>

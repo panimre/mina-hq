@@ -1954,6 +1954,276 @@ input:focus, textarea:focus { outline: none; }
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════
+   DESKTOP LAYOUT — 1024px+
+   Top nav bar + full width content + richer layouts
+═══════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+
+  /* Reset mobile app shell */
+  body { background: #F2E8EE; }
+  
+  .app {
+    max-width: 100%;
+    min-height: 100vh;
+    flex-direction: column;
+  }
+
+  /* ── TOP NAV BAR ── */
+  .bottom-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: auto;
+    width: 100%; max-width: 100%;
+    height: 60px;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 24px;
+    border-top: none;
+    border-bottom: 1px solid var(--blush);
+    gap: 0;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(20px);
+    transform: none;
+    z-index: 200;
+    box-shadow: 0 2px 20px rgba(139,32,64,0.07);
+  }
+
+  /* Logo in top nav */
+  .nav-sidebar-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    color: var(--rose-deep);
+    font-style: italic;
+    font-weight: 500;
+    padding: 0 24px 0 0;
+    border-bottom: none;
+    border-right: 1px solid var(--blush);
+    margin-bottom: 0;
+    margin-right: 16px;
+    display: block;
+    white-space: nowrap;
+  }
+
+  /* Nav items horizontal */
+  .nav-item {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px;
+    height: 60px;
+    border-radius: 0;
+    gap: 7px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    color: var(--text-light);
+  }
+  .nav-item:hover { color: var(--rose); background: var(--rose-pale); }
+  .nav-item.active {
+    color: var(--rose);
+    border-bottom: 2px solid var(--rose);
+    background: transparent;
+  }
+  .nav-item .nav-icon { font-size: 16px; }
+  .nav-item .nav-label { font-size: 13px; font-weight: 500; }
+
+  /* Brand nav items in top bar */
+  .nav-brands-dropdown {
+    position: relative;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .screen, .brand-screen {
+    margin-left: 0;
+    margin-top: 60px;
+    width: 100%;
+    max-width: 100%;
+    min-height: calc(100vh - 60px);
+    padding-bottom: 40px;
+  }
+
+  /* ── HOME SCREEN DESKTOP ── */
+  #home .home-header {
+    padding: 48px 48px 36px;
+    min-height: 220px;
+  }
+  #home .home-name { font-size: 52px; }
+  #home .today-snap { max-width: 400px; }
+
+  #home .section-head { padding: 24px 40px 12px; }
+  #home .tile-grid {
+    padding: 0 40px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+  #home .tile { min-height: 130px; }
+  #home .tile-wide {
+    grid-column: span 2;
+  }
+  #home .habit-mini { padding: 0 40px; }
+  #home .ideas-section { padding: 0 40px; }
+  #home .ideas-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ── TODAY SCREEN DESKTOP ── */
+  #today .today-header { padding: 48px 48px 32px; }
+  #today .today-body {
+    padding: 24px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  #today .today-card { min-width: 0; }
+  #today .today-card:first-child { grid-column: span 1; }
+
+  /* ── PLANNER SCREEN DESKTOP ── */
+  #planner .planner-header { padding: 48px 48px 32px; }
+  #planner .month-switcher { padding: 20px 40px 0; max-width: 300px; }
+  #planner .cal-wrap { padding: 16px 40px 0; }
+  #planner .week-selector { padding: 16px 40px 0; }
+  #planner .week-view {
+    padding: 16px 40px 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  #planner .gcal-banner { margin: 12px 40px 0; }
+
+  /* ── PROJECTS SCREEN DESKTOP ── */
+  #projects .projects-header { padding: 48px 48px 32px; }
+  #projects .cat-filter { padding: 20px 40px 0; }
+  #projects .projects-list {
+    padding: 16px 40px 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  #projects .add-proj-card { grid-column: span 1; }
+
+  /* ── BRANDS HUB DESKTOP ── */
+  #brands .brand-header { padding: 48px 48px 32px; }
+  #brands .brand-body { padding: 24px 40px; }
+  #brands .brand-body > div {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px;
+  }
+
+  /* ── BRAND DASHBOARDS DESKTOP ── */
+  .brand-screen .brand-header { padding: 48px 48px 32px; }
+  .brand-screen .brand-body {
+    padding: 24px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .brand-screen .brand-card { min-width: 0; }
+  .brand-screen .brand-card.full-width {
+    grid-column: 1 / -1;
+  }
+  .brand-screen .brand-table th,
+  .brand-screen .brand-table td { padding: 12px 14px; }
+  .brand-screen .brand-table { font-size: 13px; }
+
+  /* ── FAB position desktop ── */
+  .fab { right: 40px; bottom: 40px; width: 64px; height: 64px; font-size: 28px; }
+
+  /* ── Sheets + overlays desktop ── */
+  .capture-sheet {
+    left: 50%; max-width: 520px;
+    border-radius: var(--radius-xl);
+    bottom: auto; top: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.25s, transform 0.25s;
+    opacity: 0; pointer-events: none;
+  }
+  .capture-sheet.open {
+    opacity: 1; pointer-events: all;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+  }
+  .add-proj-sheet, .cal-settings-sheet {
+    left: 50%; max-width: 560px;
+    border-radius: var(--radius-xl);
+    bottom: auto; top: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.25s;
+    opacity: 0; pointer-events: none;
+  }
+  .add-proj-sheet.open, .cal-settings-sheet.open {
+    opacity: 1; pointer-events: all; bottom: auto;
+  }
+
+  /* ── Richer table styles on desktop ── */
+  .brand-table tr:hover td { background: rgba(196,96,122,0.03); }
+  .brand-card { padding: 24px; }
+  .brand-card-title { font-size: 11px; margin-bottom: 16px; }
+
+  /* ── Today cards richer on desktop ── */
+  .top3-input { font-size: 15px; padding: 6px 0; }
+  .time-block { height: 36px; font-size: 13px; }
+  .today-habit-label { font-size: 14px; }
+
+  /* ── Week day cards on desktop ── */
+  .week-day-card { min-height: 200px; }
+  .week-day-name { font-size: 20px; }
+  .wdb-input { padding: 8px 12px; font-size: 12px; }
+
+  /* ── Project cards richer ── */
+  .proj-card { padding: 20px; }
+  .proj-card-name { font-size: 20px; }
+  .proj-bar-bg { height: 8px; }
+  .proj-milestones { gap: 10px; }
+  .milestone-text { font-size: 13px; }
+
+  /* ── Home brand tiles grid ── */
+  #home .tile-grid:last-of-type {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  /* ── Reset bottom nav safe area padding ── */
+  .bottom-nav { padding-bottom: 0; }
+
+  /* ── Scrollbar styling ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--blush-deep); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--rose); }
+}
+
+/* ── EXTRA WIDE (1440px+) ── */
+@media (min-width: 1440px) {
+  #home .tile-grid { grid-template-columns: repeat(6, 1fr); }
+  #today .today-body { grid-template-columns: repeat(4, 1fr); }
+  #projects .projects-list { grid-template-columns: repeat(4, 1fr); }
+  .brand-screen .brand-body { grid-template-columns: repeat(3, 1fr); }
+  #brands .brand-body > div { grid-template-columns: repeat(6, 1fr) !important; }
+  #planner .week-view { grid-template-columns: repeat(7, 1fr); }
+}
+
+
+@media (min-width: 1024px) {
+  .desktop-brand-nav {
+    display: flex !important;
+    align-items: center;
+    margin-left: 8px;
+    padding-left: 16px;
+    border-left: 1px solid var(--blush);
+  }
+  .desktop-brand-nav .nav-item {
+    padding: 0 10px;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+  .desktop-brand-nav .nav-item .nav-label { font-size: 11px; }
+}
 </style>
 </head>
 <body>
@@ -1982,6 +2252,15 @@ input:focus, textarea:focus { outline: none; }
     <span class="nav-icon">✦</span>
     <span class="nav-label">Brands</span>
   </button>
+  <!-- Desktop brand shortcuts — hidden on mobile via CSS -->
+  <div class="desktop-brand-nav" style="display:none">
+    <button class="nav-item" onclick="showScreen('ibworld')" style="font-size:11px">🌍 IBWorld</button>
+    <button class="nav-item" onclick="showScreen('mtm')" style="font-size:11px">📚 MTM</button>
+    <button class="nav-item" onclick="showScreen('moments')" style="font-size:11px">🌸 Moments</button>
+    <button class="nav-item" onclick="showScreen('bossyfit')" style="font-size:11px">💪 Bossy Fit</button>
+    <button class="nav-item" onclick="showScreen('endochat')" style="font-size:11px">🎙 EndoChat</button>
+    <button class="nav-item" onclick="showScreen('madebymina')" style="font-size:11px">🎨 Made By Mina</button>
+  </div>
 </nav>
 
 <!-- ═══════════════════════════════════

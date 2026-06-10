@@ -954,6 +954,36 @@ textarea.line-inp{resize:none;min-height:80px;line-height:1.6}
   <button class="ghost-btn" style="margin-top:12px" onclick="closeAll()">Cancel</button>
 </div>
 
+<!-- Day Sheet -->
+<div class="sheet" id="daySheet" style="max-height:90vh;overflow-y:auto">
+  <div class="sheet-handle"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div>
+      <div id="daySheetDow" style="font-size:11px;color:var(--rose);font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px">Monday</div>
+      <div id="daySheetDate" style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--rose-deep);font-style:italic">June 9</div>
+    </div>
+    <div id="daySheetRole" style="font-size:12px;color:var(--text-light);font-style:italic">IB Leadership</div>
+  </div>
+
+  <!-- Top 3 for this day -->
+  <div style="font-size:10px;font-weight:600;color:var(--rose);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">Top 3 Priorities</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="daySheetTop3"></div>
+
+  <!-- Time blocks for this day -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <div style="font-size:10px;font-weight:600;color:var(--rose);letter-spacing:.12em;text-transform:uppercase">Time Blocks</div>
+    <button onclick="addDayTB()" style="background:var(--rose-pale);border:none;color:var(--rose);font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;font-family:inherit">+ Add</button>
+  </div>
+  <div id="daySheetTBs" style="margin-bottom:16px"></div>
+
+  <!-- Calendar note for this day -->
+  <div style="font-size:10px;font-weight:600;color:var(--rose);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">Calendar Note</div>
+  <input id="daySheetNote" placeholder="Add a note for this day on the calendar…" style="width:100%;border:none;border-bottom:1.5px solid var(--blush);padding:8px 0;font-size:14px;color:var(--text);background:transparent;font-family:inherit;outline:none;margin-bottom:20px">
+
+  <button class="save-btn" onclick="saveDaySheet()">Save Day ✦</button>
+  <button class="ghost-btn" onclick="closeAll()">Close</button>
+</div>
+
 <!-- FAB -->
 <button class="fab" onclick="openCapture()">✦</button>
 <div class="toast" id="toast"></div>
@@ -1017,7 +1047,7 @@ function go(id){
 }
 
 // ── SHEETS ──────────────────────────────────────────────────
-var SHEETS=['captureSheet','addProjSheet','calSheet','ttSheet','emojiSheet'];
+var SHEETS=['captureSheet','addProjSheet','calSheet','ttSheet','emojiSheet','daySheet'];
 function openSheet(id){
   closeAll();
   document.getElementById('ov').classList.add('open');
@@ -1074,7 +1104,7 @@ function buildHomeWeek(){
     var isPast=d<NOW && !isToday;
     var cell=document.createElement('div');
     cell.className='wsd '+(isToday?'wsd-today':isPast?'wsd-past':'wsd-future');
-    cell.onclick=function(){ go('today'); };
+    cell.onclick=(function(dt){ return function(){ openDaySheet(dt); }; })(d);
     var lbl=document.createElement('div'); lbl.className='wsd-lbl'; lbl.textContent=DAYS3[d.getDay()];
     var circle=document.createElement('div'); circle.className='wsd-circle'; circle.textContent=d.getDate();
     var role=document.createElement('div'); role.className='wsd-role';
@@ -1487,6 +1517,7 @@ function buildCal(){
     var num=document.createElement('span'); num.className='cal-num'; num.textContent=d;
     var note=document.createElement('input'); note.className='cal-note'; note.placeholder='+'; note.maxLength=18;
     var key='cn-'+pYear+'-'+pMonth+'-'+d; note.value=ls(key)||'';
+    note.dataset.key = key;
     note.addEventListener('input',(function(k,el){ return function(){ ls(k,el.value); }; })(key,note));
     note.addEventListener('click',function(e){ e.stopPropagation(); });
     cell.appendChild(num); cell.appendChild(note); grid.appendChild(cell);
@@ -2252,6 +2283,135 @@ function addMsInline(pid) {
     });
   }, 50);
   toast('✦ Milestone added!');
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  DAY SHEET — tap any day in This Week to edit
+// ═══════════════════════════════════════════════════════
+
+var _activeDayDate = null; // Date object for the sheet
+
+function openDaySheet(date) {
+  _activeDayDate = date;
+  var dow = date.getDay();
+  var isToday = date.toDateString() === NOW.toDateString();
+  var dKey = date.toDateString();
+
+  // Header
+  document.getElementById('daySheetDow').textContent = DAYS[dow] + (isToday ? ' — Today' : '');
+  document.getElementById('daySheetDate').textContent = MONTHS[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+  document.getElementById('daySheetRole').textContent = DAY_ROLES[dow] || '';
+
+  // Top 3
+  var t3Container = document.getElementById('daySheetTop3');
+  t3Container.innerHTML = '';
+  var pColors = ['var(--rose-light)','var(--gold-light)','var(--mauve-light)'];
+  var tColors = ['var(--rose-deep)','#7A5A1A','var(--mauve)'];
+  for (var i = 0; i < 3; i++) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px';
+    var num = document.createElement('div');
+    num.style.cssText = 'width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:'+pColors[i]+';color:'+tColors[i];
+    num.textContent = i + 1;
+    var inp = document.createElement('input');
+    inp.style.cssText = 'flex:1;border:none;border-bottom:1.5px solid var(--blush);padding:6px 0;font-size:13px;color:var(--text);background:transparent;font-family:inherit;outline:none';
+    inp.placeholder = 'Priority ' + (i+1) + '…';
+    inp.value = ls('p-' + i + '-' + dKey) || '';
+    inp.dataset.idx = i;
+    row.appendChild(num);
+    row.appendChild(inp);
+    t3Container.appendChild(row);
+  }
+
+  // Time blocks
+  renderDaySheetTBs(dKey, dow);
+
+  // Calendar note — pre-fill from existing cal note
+  var calNoteKey = 'cn-' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+  document.getElementById('daySheetNote').value = ls(calNoteKey) || '';
+  document.getElementById('daySheetNote').dataset.calKey = calNoteKey;
+
+  openSheet('daySheet');
+}
+
+function renderDaySheetTBs(dKey, dow) {
+  var container = document.getElementById('daySheetTBs');
+  if (!container) return;
+  var tbs = ls('tbs-' + dKey) || [
+    {time:'9:00 AM', task: DAY_ROLES[dow] || '', bg:'var(--rose-light)'},
+    {time:'11:00 AM', task:'', bg:'var(--rose-light)'},
+    {time:'1:00 PM', task:'Lunch + break', bg:'var(--gold-light)'},
+    {time:'3:00 PM', task:'', bg:'var(--mauve-light)'},
+    {time:'5:00 PM', task:'', bg:'var(--blush)'},
+  ];
+  container.innerHTML = '';
+  tbs.forEach(function(tb, i) {
+    var row = document.createElement('div');
+    row.className = 'tb-row';
+    var ti = document.createElement('input'); ti.className = 'tb-time'; ti.value = tb.time || ''; ti.placeholder = '9:00 AM';
+    ti.addEventListener('change', (function(idx, dk) { return function() { var t = ls('tbs-'+dk)||[]; if(t[idx]) t[idx].time=this.value; ls('tbs-'+dk,t); }; })(i, dKey));
+    var ta = document.createElement('input'); ta.className = 'tb-task'; ta.value = tb.task || ''; ta.placeholder = 'Add task…';
+    ta.style.background = tb.bg || 'var(--rose-light)';
+    ta.addEventListener('input', (function(idx, dk) { return function() { var t = ls('tbs-'+dk)||[]; if(t[idx]) t[idx].task=this.value; ls('tbs-'+dk,t); }; })(i, dKey));
+    var del = document.createElement('button'); del.className = 'tb-del'; del.textContent = '×';
+    del.addEventListener('click', (function(idx, dk) { return function() { var t = ls('tbs-'+dk)||[]; t.splice(idx,1); ls('tbs-'+dk,t); if(_activeDayDate) renderDaySheetTBs(dk, _activeDayDate.getDay()); }; })(i, dKey));
+    row.appendChild(ti); row.appendChild(ta); row.appendChild(del);
+    container.appendChild(row);
+  });
+}
+
+function addDayTB() {
+  if (!_activeDayDate) return;
+  var dKey = _activeDayDate.toDateString();
+  var tbs = ls('tbs-' + dKey) || [];
+  var bgCycle = ['var(--rose-light)','var(--gold-light)','var(--mauve-light)','var(--blush)','#F5F0F2'];
+  tbs.push({time:'', task:'', bg: bgCycle[tbs.length % bgCycle.length]});
+  ls('tbs-' + dKey, tbs);
+  renderDaySheetTBs(dKey, _activeDayDate.getDay());
+  setTimeout(function() {
+    var rows = document.querySelectorAll('#daySheetTBs .tb-row');
+    if (rows.length) { var last = rows[rows.length-1]; var inp = last.querySelector('.tb-time'); if(inp) inp.focus(); }
+  }, 50);
+}
+
+function saveDaySheet() {
+  if (!_activeDayDate) return;
+  var dKey = _activeDayDate.toDateString();
+
+  // Save top 3
+  var t3Inputs = document.querySelectorAll('#daySheetTop3 input');
+  t3Inputs.forEach(function(inp, i) {
+    ls('p-' + i + '-' + dKey, inp.value);
+  });
+
+  // Save calendar note + update calendar grid
+  var noteInp = document.getElementById('daySheetNote');
+  var calKey = noteInp.dataset.calKey;
+  var noteVal = noteInp.value.trim();
+  if (calKey) {
+    ls(calKey, noteVal);
+    // Update the calendar cell if it's visible
+    var calNote = document.querySelector('.cal-note[data-key="' + calKey + '"]');
+    if (calNote) calNote.value = noteVal;
+    // Also rebuild cal to reflect changes if on planner screen
+    if (document.getElementById('planner').classList.contains('active')) {
+      buildCal();
+      if (typeof renderCalEvents === 'function') renderCalEvents();
+    }
+  }
+
+  // If today, also update Today screen
+  if (dKey === NOW.toDateString()) {
+    renderPriorities();
+    renderTBs();
+  }
+
+  // Refresh home week strip top 3 preview
+  buildHomeWeek();
+
+  closeAll();
+  toast('✦ ' + DAYS[_activeDayDate.getDay()] + ' saved!');
 }
 
 </script>

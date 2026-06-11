@@ -1219,12 +1219,20 @@ var TB_DEFAULTS=[
 var TB_BG_CYCLE=['var(--rose-light)','var(--gold-light)','var(--mauve-light)','var(--blush)','#F5F0F2'];
 var tbBgIdx=0;
 
-function getTBs(){ return ls('tbs-'+D())||TB_DEFAULTS.map(function(t){ return Object.assign({},t,{bg:'var(--rose-light)'}); }); }
+function getTBs(){
+  var saved = ls('tbs-'+D());
+  if (!saved) {
+    saved = TB_DEFAULTS.map(function(t){ return Object.assign({},t,{bg:'var(--rose-light)'}); });
+    ls('tbs-'+D(), saved);
+  }
+  return saved;
+}
 function saveTBs(tbs){ ls('tbs-'+D(),tbs); }
 
 function renderTBs(){
   var list=document.getElementById('tbList'); if(!list) return;
-  var tbs=getTBs(); list.innerHTML='';
+  var tbs=getTBs(); // getTBs now always saves defaults
+  list.innerHTML='';
   tbs.forEach(function(tb,i){
     var row=document.createElement('div'); row.className='tb-row';
     var ti=document.createElement('input'); ti.className='tb-time'; ti.value=tb.time||''; ti.placeholder='9:00 AM';
@@ -2338,24 +2346,38 @@ function openDaySheet(date) {
 function renderDaySheetTBs(dKey, dow) {
   var container = document.getElementById('daySheetTBs');
   if (!container) return;
-  var tbs = ls('tbs-' + dKey) || [
-    {time:'9:00 AM', task: DAY_ROLES[dow] || '', bg:'var(--rose-light)'},
-    {time:'11:00 AM', task:'', bg:'var(--rose-light)'},
-    {time:'1:00 PM', task:'Lunch + break', bg:'var(--gold-light)'},
-    {time:'3:00 PM', task:'', bg:'var(--mauve-light)'},
-    {time:'5:00 PM', task:'', bg:'var(--blush)'},
-  ];
+  var tbs = ls('tbs-' + dKey);
+  if (!tbs) {
+    tbs = [
+      {time:'9:00 AM', task: DAY_ROLES[dow] || '', bg:'var(--rose-light)'},
+      {time:'11:00 AM', task:'', bg:'var(--rose-light)'},
+      {time:'1:00 PM', task:'Lunch + break', bg:'var(--gold-light)'},
+      {time:'3:00 PM', task:'', bg:'var(--mauve-light)'},
+      {time:'5:00 PM', task:'', bg:'var(--blush)'},
+    ];
+    ls('tbs-' + dKey, tbs);
+  }
   container.innerHTML = '';
   tbs.forEach(function(tb, i) {
     var row = document.createElement('div');
     row.className = 'tb-row';
     var ti = document.createElement('input'); ti.className = 'tb-time'; ti.value = tb.time || ''; ti.placeholder = '9:00 AM';
-    ti.addEventListener('change', (function(idx, dk) { return function() { var t = ls('tbs-'+dk)||[]; if(t[idx]) t[idx].time=this.value; ls('tbs-'+dk,t); }; })(i, dKey));
+    ti.addEventListener('change', (function(idx, dk) { return function() {
+      var t = ls('tbs-'+dk)||[]; if(!t[idx]) t[idx]={}; t[idx].time=this.value; ls('tbs-'+dk,t);
+      if(dk === NOW.toDateString()) renderTBs();
+    }; })(i, dKey));
     var ta = document.createElement('input'); ta.className = 'tb-task'; ta.value = tb.task || ''; ta.placeholder = 'Add task…';
     ta.style.background = tb.bg || 'var(--rose-light)';
-    ta.addEventListener('input', (function(idx, dk) { return function() { var t = ls('tbs-'+dk)||[]; if(t[idx]) t[idx].task=this.value; ls('tbs-'+dk,t); }; })(i, dKey));
+    ta.addEventListener('input', (function(idx, dk) { return function() {
+      var t = ls('tbs-'+dk)||[]; if(!t[idx]) t[idx]={}; t[idx].task=this.value; ls('tbs-'+dk,t);
+      if(dk === NOW.toDateString()) renderTBs();
+    }; })(i, dKey));
     var del = document.createElement('button'); del.className = 'tb-del'; del.textContent = '×';
-    del.addEventListener('click', (function(idx, dk) { return function() { var t = ls('tbs-'+dk)||[]; t.splice(idx,1); ls('tbs-'+dk,t); if(_activeDayDate) renderDaySheetTBs(dk, _activeDayDate.getDay()); }; })(i, dKey));
+    del.addEventListener('click', (function(idx, dk) { return function() {
+      var t = ls('tbs-'+dk)||[]; t.splice(idx,1); ls('tbs-'+dk,t);
+      if(_activeDayDate) renderDaySheetTBs(dk, _activeDayDate.getDay());
+      if(dk === NOW.toDateString()) renderTBs();
+    }; })(i, dKey));
     row.appendChild(ti); row.appendChild(ta); row.appendChild(del);
     container.appendChild(row);
   });
@@ -2369,6 +2391,8 @@ function addDayTB() {
   tbs.push({time:'', task:'', bg: bgCycle[tbs.length % bgCycle.length]});
   ls('tbs-' + dKey, tbs);
   renderDaySheetTBs(dKey, _activeDayDate.getDay());
+  // Sync Today screen if editing today
+  if (dKey === NOW.toDateString()) renderTBs();
   setTimeout(function() {
     var rows = document.querySelectorAll('#daySheetTBs .tb-row');
     if (rows.length) { var last = rows[rows.length-1]; var inp = last.querySelector('.tb-time'); if(inp) inp.focus(); }
@@ -2401,7 +2425,7 @@ function saveDaySheet() {
     }
   }
 
-  // If today, also update Today screen
+  // Always sync Today screen if the saved day is today
   if (dKey === NOW.toDateString()) {
     renderPriorities();
     renderTBs();
